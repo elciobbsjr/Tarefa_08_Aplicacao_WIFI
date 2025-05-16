@@ -25,10 +25,18 @@
 static int modo_alerta = 0;
 ssd1306_t oled;
 
-// Atualiza a mensagem no Display OLED
+// Atualiza a mensagem no Display OLED com quebra de linha se necessário
 void atualizar_display(const char *mensagem) {
     memset(oled.ram_buffer + 1, 0, oled.bufsize - 1);
-    ssd1306_draw_string(oled.ram_buffer + 1, 10, 25, mensagem);
+
+    if (strcmp(mensagem, "Sistema em repouso") == 0) {
+        ssd1306_draw_string(oled.ram_buffer + 1, 30, 10, "Sistema");
+        ssd1306_draw_string(oled.ram_buffer + 1, 50, 25, "em");
+        ssd1306_draw_string(oled.ram_buffer + 1, 25, 40, "Repouso");
+    } else {
+        ssd1306_draw_string(oled.ram_buffer + 1, 10, 25, mensagem);
+    }
+
     ssd1306_command(&oled, ssd1306_set_column_address);
     ssd1306_command(&oled, 0);
     ssd1306_command(&oled, OLED_WIDTH - 1);
@@ -46,7 +54,7 @@ static int generate_html_content(const char *params, char *result, size_t max_le
             gpio_put(BUZZER_A, 0);
             gpio_put(BUZZER_B, 0);
             modo_alerta = 0;
-            atualizar_display("Evacuar");
+            atualizar_display("Sistema ativo");
             printf("[HTTP] LIGAR\n");
         } else if (strcmp(params, "acao=desligar") == 0) {
             gpio_put(LED_R, 0);

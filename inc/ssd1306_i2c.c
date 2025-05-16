@@ -163,7 +163,7 @@ void ssd1306_draw_char(uint8_t *ssd, int16_t x, int16_t y, uint8_t character) {
 }
 
 // Desenha uma string, chamando a função de desenhar caractere várias vezes
-void ssd1306_draw_string(uint8_t *ssd, int16_t x, int16_t y, char *string) {
+void ssd1306_draw_string(uint8_t *ssd, int16_t x, int16_t y, const char *string) {
     if (x > ssd1306_width - 8 || y > ssd1306_height - 8) {
         return;
     }
