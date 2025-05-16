@@ -3,8 +3,12 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "inc/ssd1306.h"
+#include "lwip/pbuf.h"
+#include "lwip/tcp.h"
+#include "dhcpserver.h"
+#include "dnsserver.h"
 
-// Definições do I2C e Display OLED
+// Definições de I2C e Display OLED
 #define I2C_PORT i2c1
 #define SDA_PIN 14
 #define SCL_PIN 15
@@ -25,7 +29,7 @@
 static int modo_alerta = 0;
 ssd1306_t oled;
 
-// Atualiza a mensagem no Display OLED com quebra de linha se necessário
+// Função de Atualização do Display OLED
 void atualizar_display(const char *mensagem) {
     memset(oled.ram_buffer + 1, 0, oled.bufsize - 1);
 
@@ -46,11 +50,7 @@ void atualizar_display(const char *mensagem) {
     ssd1306_send_data(&oled);
 }
 
-#include "lwip/pbuf.h"
-#include "lwip/tcp.h"
-#include "dhcpserver.h"
-#include "dnsserver.h"
-
+// Função de Geração da Página Web Completa
 static int generate_html_content(const char *params, char *result, size_t max_len) {
     if (params) {
         if (strcmp(params, "acao=ligar") == 0) {
@@ -77,12 +77,29 @@ static int generate_html_content(const char *params, char *result, size_t max_le
     }
 
     return snprintf(result, max_len,
-        "<html><head><title>Controle de LED</title></head><body>"
-        "<h1>Controle de Alerta</h1>"
-        "<p><a href=\"?acao=ligar\"><button>Ligar</button></a></p>"
-        "<p><a href=\"?acao=desligar\"><button>Desligar</button></a></p>"
-        "<p><a href=\"?acao=alerta\"><button>Alerta</button></a></p>"
-        "</body></html>");
+        "<!DOCTYPE html>"
+        "<html lang=\"pt-br\">"
+        "<head>"
+        "<meta charset=\"UTF-8\">"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+        "<title>Controle de Alarme</title>"
+        "<style>"
+        "body { font-family: Arial, sans-serif; background-color: #f0f0f0; text-align: center; padding: 50px; }"
+        "h1 { color: #333; }"
+        ".button { display: inline-block; padding: 15px 25px; font-size: 16px; cursor: pointer; text-align: center; "
+        "text-decoration: none; outline: none; color: #fff; background-color: #4CAF50; border: none; border-radius: 15px; }"
+        ".button:hover { background-color: #45a049; }"
+        ".alerta { background-color: #f44336; }"
+        "</style>"
+        "</head>"
+        "<body>"
+        "<h1>Controle de Alarme</h1>"
+        "<a href=\"?acao=ligar\"><button class=\"button\">Ligar</button></a><br><br>"
+        "<a href=\"?acao=desligar\"><button class=\"button\">Desligar</button></a><br><br>"
+        "<a href=\"?acao=alerta\"><button class=\"button alerta\">Alerta</button></a>"
+        "</body>"
+        "</html>"
+    );
 }
 
 err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err) {
@@ -93,7 +110,8 @@ err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
     }
 
     char headers[512] = {0};
-    char response[1024] = {0};
+    char response[2048] = {0};  // Aumentei o buffer para suportar a nova página
+
     pbuf_copy_partial(p, headers, p->tot_len < sizeof(headers) ? p->tot_len : sizeof(headers) - 1, 0);
 
     if (strncmp(headers, HTTP_GET, strlen(HTTP_GET)) == 0) {
@@ -128,20 +146,19 @@ err_t tcp_server_accept(void *arg, struct tcp_pcb *new_pcb, err_t err) {
 int main() {
     stdio_init_all();
 
-    // Inicialização GPIO
+    // GPIO Config
     gpio_init(LED_R); gpio_set_dir(LED_R, GPIO_OUT);
     gpio_init(LED_B); gpio_set_dir(LED_B, GPIO_OUT);
     gpio_init(BUZZER_A); gpio_set_dir(BUZZER_A, GPIO_OUT);
     gpio_init(BUZZER_B); gpio_set_dir(BUZZER_B, GPIO_OUT);
 
-    // Inicialização I2C para OLED
+    // I2C OLED
     i2c_init(I2C_PORT, 400 * 1000);
     gpio_set_function(SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(SCL_PIN, GPIO_FUNC_I2C);
     gpio_pull_up(SDA_PIN);
     gpio_pull_up(SCL_PIN);
 
-    // Configuração do Display OLED
     ssd1306_init_bm(&oled, OLED_WIDTH, OLED_HEIGHT, false, ssd1306_i2c_address, I2C_PORT);
     ssd1306_config(&oled);
     ssd1306_init();
