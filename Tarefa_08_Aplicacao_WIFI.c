@@ -30,11 +30,11 @@ void atualizar_display(const char *mensagem) {
     memset(oled.ram_buffer + 1, 0, oled.bufsize - 1);
 
     if (strcmp(mensagem, "Sistema em repouso") == 0) {
-        ssd1306_draw_string(oled.ram_buffer + 1, 30, 10, "Sistema");
-        ssd1306_draw_string(oled.ram_buffer + 1, 50, 25, "em");
-        ssd1306_draw_string(oled.ram_buffer + 1, 25, 40, "Repouso");
+        ssd1306_draw_string(oled.ram_buffer + 1, 30, 10, (char *)"Sistema");
+        ssd1306_draw_string(oled.ram_buffer + 1, 50, 25, (char *)"em");
+        ssd1306_draw_string(oled.ram_buffer + 1, 25, 40, (char *)"Repouso");
     } else {
-        ssd1306_draw_string(oled.ram_buffer + 1, 10, 25, mensagem);
+        ssd1306_draw_string(oled.ram_buffer + 1, 10, 25, (char *)mensagem);
     }
 
     ssd1306_command(&oled, ssd1306_set_column_address);
@@ -45,6 +45,11 @@ void atualizar_display(const char *mensagem) {
     ssd1306_command(&oled, (OLED_HEIGHT / 8) - 1);
     ssd1306_send_data(&oled);
 }
+
+#include "lwip/pbuf.h"
+#include "lwip/tcp.h"
+#include "dhcpserver.h"
+#include "dnsserver.h"
 
 static int generate_html_content(const char *params, char *result, size_t max_len) {
     if (params) {
@@ -79,11 +84,6 @@ static int generate_html_content(const char *params, char *result, size_t max_le
         "<p><a href=\"?acao=alerta\"><button>Alerta</button></a></p>"
         "</body></html>");
 }
-
-#include "lwip/pbuf.h"
-#include "lwip/tcp.h"
-#include "dhcpserver.h"
-#include "dnsserver.h"
 
 err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err) {
     if (!p) {
