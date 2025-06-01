@@ -36,7 +36,7 @@ add_executable(Tarefa_08_Aplicacao_WIFI
     Tarefa_08_Aplicacao_WIFI.c
     dhcpserver/dhcpserver.c
     dnsserver/dnsserver.c
-    inc/ssd1306_i2c.c  # Adiciona o driver do display OLED
+    inc/ssd1306_i2c.c  # Mantido na pasta inc, conforme solicitado
 )
 
 # Inclui diretórios de cabeçalhos
@@ -44,15 +44,16 @@ target_include_directories(Tarefa_08_Aplicacao_WIFI PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/dhcpserver
     ${CMAKE_CURRENT_LIST_DIR}/dnsserver
-    ${CMAKE_CURRENT_LIST_DIR}/inc  # Inclui as bibliotecas do display OLED
+    ${CMAKE_CURRENT_LIST_DIR}/inc  # Bibliotecas do display OLED
 )
 
 # Linka as bibliotecas necessárias
 target_link_libraries(Tarefa_08_Aplicacao_WIFI
     pico_stdlib
     pico_cyw43_arch_lwip_threadsafe_background
-    pico_stdio_usb  # Ativa saída USB CDC para monitor serial
-    hardware_i2c    # Necessário para o uso do I2C com o display
+    pico_stdio_usb
+    hardware_i2c
+    hardware_adc
 )
 
 # Configura IP fixo para o Access Point
